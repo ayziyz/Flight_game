@@ -63,4 +63,13 @@ CREATE TABLE Checkpoint (
                             FOREIGN KEY (weather_id) REFERENCES Weather(id) ON DELETE SET NULL
 );
 
-ALTER DATABASE flight_sim CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; -- Updated oct 6/2024
+ALTER DATABASE flight_sim CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Updated oct 6/2024
+
+Alter table user rename column checkpoint_id to fuel_consumed;
+ALTER TABLE User DROP FOREIGN KEY fk_checkpoint_id;
+ALTER TABLE User MODIFY fuel_consumed INT DEFAULT 500;
+-- updated oct 7/2024.
+-- for the new feature updates on the game where
+-- ever user created or existed has a fuel capacity of certain level,
+-- which can be gained more by completing the levels and reduced when user fails to complete a challenge

@@ -9,13 +9,13 @@ from hurdles import get_hurdles_for_level, level_hurdles
 
 # Create a new user or retrieve an existing one
 def get_or_create_user(cursor, username):
-    cursor.execute("SELECT id, checkpoint_id FROM User WHERE username = %s", (username,))
+    cursor.execute("SELECT id, fuel_consumed FROM User WHERE username = %s", (username,))
     user = cursor.fetchone()
     if user:
-        print(f"Welcome back, {username}! Resuming from last checkpoint.")
+        print(f"Welcome back, {username}! Resuming from where you left off.")
         return user
     else:
-        cursor.execute("INSERT INTO User (username, checkpoint_id) VALUES (%s, NULL)", (username,))
+        cursor.execute("INSERT INTO User (username, fuel_consumed) VALUES (%s, NULL)", (username,))
         print(f"Welcome {username}. Thank you Registering, Dive into the Fun World. Where dream become reality!!!")
         return cursor.lastrowid, None
 
@@ -27,7 +27,7 @@ def get_airports_for_country_and_continent(cursor, country, continent):
         JOIN Country c ON a.iso_country = c.id
         WHERE a.iso_country = %s 
           AND c.continent = %s
-        LIMIT 10  -- Limit to 10 airports
+        LIMIT 12  -- Limit to 12 airports
     """, (country, continent))
     airports = cursor.fetchall()
     return airports
@@ -139,12 +139,17 @@ def play_game():
     connection = connect_database()
     cursor = connection.cursor(buffered=True)
 
-    # User creation or fetching
-    username = input("!!!Hello!!!\n <<<<<<<<<...Welcome to the flight simulator...>>>>>>>> \
-    \n... where YOU: A Pilot, is about to take one of our Airplane to journey you have never been before.\
-    \nNow follow the instructions and take a seat and find out what our game holds in for you...\
-    \n\nEnter your username: ")
-    user_id, checkpoint_id = get_or_create_user(cursor, username)
+    # User creation or fetching using get_or_create_user
+    username = input("\n <<<<<<<<<...Welcome to the flight simulator...>>>>>>>> \
+       \n... where YOU: A Pilot, is about to take one of our Airplane to journey you have never been before.\
+       \nNow follow the instructions and take a seat and find out what our game holds in for you...\
+       \n\nEnter your username: ")
+
+    user_id, fuel_consumed = get_or_create_user(cursor, username)
+    if fuel_consumed is None:
+        fuel_consumed = 500  # Default fuel for new users
+    print(f"Your current fuel is {fuel_consumed}.")
+
     connection.commit()
 
     # Select continent and country (default Finland)
@@ -181,66 +186,72 @@ def play_game():
             print("Invalid selection. Please enter a valid index.")
 
     # Get scheduled departure time
-    departure_time_str = input("Enter scheduled departure time (YYYY-MM-DD HH:MM): ")
-    scheduled_departure_time = datetime.datetime.strptime(departure_time_str, '%Y-%m-%d %H:%M')
+    departure_time_str = input("Enter scheduled departure time (YYYY-MM-DD): ")
+    scheduled_departure_time = datetime.datetime.strptime(departure_time_str, '%Y-%m-%d')
 
     # Automatically generate arrival time
     flight_duration, distance = calculate_flight_duration(departure_airport, arrival_airport)
     scheduled_arrival_time = scheduled_departure_time + flight_duration
 
-    # Print flight details
-    print(f"Flight Details:\n")
-    print(f"From: {departure_airport[1]} to {arrival_airport[1]}")
-    print(f"Distance: {distance:.2f} km")
-    print(f"Scheduled Departure: {scheduled_departure_time}")
-    print(f"Scheduled Arrival: {scheduled_arrival_time}")
-    print(f"The flight is of: {flight_duration} hours")
+    print(f"Flight Details:\nFrom: {departure_airport[1]} to {arrival_airport[1]}")
+    print(f"Distance: {distance:.2f} km, Flight Time: {flight_duration}")
+
+    # Start with initial weather
+    weather = generate_weather(1)
+    level = 1
+    total_flight_time = datetime.timedelta()
 
     # Game loop
-    # level = 1
-    # while True:
-    #     print(f"\nLevel {level}: Flying from {departure_airport[1]} to {arrival_airport[1]}")
-    #     weather = generate_weather(level)
-    #     print(
-    #         f"Weather Conditions: {weather['condition']}, Temperature: {weather['temperature']}°C, Wind Speed: {weather['wind_speed']} km/h, Humidity: {weather['humidity']}%, Visibility: {weather['visibility']} km")
-    #
-    #     # Simulate flight success
-    #     success = input("Do you want to continue to the next level (yes/no)? ").lower()
-    #
-    #     if success == "yes":
-    #         print("\n\n.........................................!!!WORKING ON UPDATES!!!.....................................Exiting the game.")
-    #         break  # Exit the game
-    #     elif success == "no":
-    #         print("\n\n.......You quit the game!........")
-    #         break
+    while fuel_consumed > 0:
+        print(f"\nLevel {level}: Weather Condition - {weather['condition']}")
+        hurdles = get_hurdles_for_level(level)
+        print(f"Your current fuel: {fuel_consumed}")
 
-        # # Progress to next level, increase weather complexity
-        # level += 1
-        # if level > 4:
-        #     print("Congratulations! You've completed the game!")
-        #     break
+        for hurdle in hurdles:
+            print("\n--- Challenge ---")
+            print(hurdle['description'])
+            user_choice = input("Choose an option (1 or 2): ")
 
-    level = 1
-    weather = generate_weather(level)
+            # print("Hurdle data:", hurdle)
 
-    # Start flight and handle events
-    success, total_flight_time = start_flight(departure_airport, arrival_airport, flight_duration, weather, cursor,
-                                              user_id, level)
+            # Adjust fuel based on challenge result
+            complexity_percentage = hurdle['complexity'] / 100.0
+            if int(user_choice) == hurdle['correct_option']:
+                print(f"Success: {hurdle['result']}")
+                fuel_increase = fuel_consumed * complexity_percentage
+                fuel_consumed += fuel_increase
+                print(f"Fuel increased by {fuel_increase:.2f}. New fuel: {fuel_consumed:.2f}")
+            else:
+                print("Wrong choice! You lost the challenge.")
+                fuel_loss = fuel_consumed * complexity_percentage
+                fuel_consumed -= fuel_loss
+                print(f"Fuel decreased by {fuel_loss:.2f}. New fuel: {fuel_consumed:.2f}")
+                if fuel_consumed <= 0:
+                    print("You ran out of fuel! Game Over.")
+                    return
 
-    # Log flight if successful
-    if success:
-        weather_id = create_weather(cursor, weather)
-        flight_id = create_flight(cursor, departure_airport[0], arrival_airport[0], scheduled_departure_time,
-                                  scheduled_arrival_time)
-        cursor.execute("""
-                INSERT INTO User_Flight_Log (user_id, flight_id, weather_id, flight_time, completion_status, created_at)
-                VALUES (%s, %s, %s, NOW(), %s, NOW())
-            """, (user_id, flight_id, weather_id, "Success"))
-        connection.commit()
+        # Progress to the next level
+        total_flight_time += flight_duration
+        level += 1
+        if level > 4:
+            print("Congratulations! You've completed the game.")
+            break
 
-        print(f"High Score: {total_flight_time}")
-    else:
-        print("You failed the mission. Try again next time.")
+        # Generate harder weather for the next level
+        weather = generate_weather(level)
+
+    # Insert flight log and update fuel
+    weather_id = create_weather(cursor, weather)
+    flight_id = create_flight(cursor, departure_airport[0], arrival_airport[0], scheduled_departure_time,
+                              scheduled_arrival_time)
+    cursor.execute("""
+            INSERT INTO User_Flight_Log (user_id, flight_id, weather_id, flight_time, completion_status, created_at)
+            VALUES (%s, %s, %s, NOW(), %s, NOW())
+        """, (user_id, flight_id, weather_id, "Success"))
+    cursor.execute("UPDATE User SET fuel_consumed = %s WHERE id = %s", (fuel_consumed, user_id))
+    connection.commit()
+
+    print(f"Total flight time: {total_flight_time}, Final fuel: {fuel_consumed:.2f}")
 
     # Close connection
     cursor.close()
