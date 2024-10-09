@@ -1,11 +1,11 @@
-**Overview**
+# Overview
 This is a terminal-based flight simulator game where players can choose airports, fly between them, and face various weather-based challenges. The goal is to navigate successfully through different weather conditions while making strategic decisions to keep the flight on course.
 
-**How to Play**
-Start the Game:
+## How to Play
+### Start the Game:
 Launch the game by running the main.py file in your terminal.
 
-Enter Username:
+### Enter Username:
 Input your username to start. If you are a returning player, the game will load your last checkpoint.
 
 Select Flight Details:
@@ -22,16 +22,18 @@ The game will track your progress, calculate flight time, and adjust weather con
 Save and Resume:
 The game automatically saves your progress at checkpoints. You can resume from the last saved point if you exit the game.
 
-**Basic Controls**
+### Basic Controls
 Use 1 or 2 to select options during weather challenges.
 Follow on-screen instructions for navigation and decision-making.
 Requirements
 Python 3.x
 MariaDB
 
-**Running the Game**
+### Running the Game
 Clone the repository.
 Ensure you have the necessary Python packages installed (requirements.txt provided).
 Set up the MariaDB database using the provided schema.
 Run the game:
-'python main.py'
+
+```
+python main.py
