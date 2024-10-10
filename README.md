@@ -1,6 +1,16 @@
 # Overview
 This is a terminal-based flight simulator game where players can choose airports, fly between them, and face various weather-based challenges. The goal is to navigate successfully through different weather conditions while making strategic decisions to keep the flight on course.
 
+## Setup the Game
+Clone the repository.
+Ensure you have the necessary Python packages installed.
+Set up the MariaDB database on your device.
+Create a new database locally.
+
+## Setup Database
+After creating the database, chage the host, port, database, user and password as set. 
+Run Setup_datbase > setup_db.py file.
+
 ## How to Play
 ### Start the Game:
 Launch the game by running the main.py file in your terminal.
@@ -25,15 +35,8 @@ The game automatically saves your progress at checkpoints. You can resume from t
 ### Basic Controls
 Use 1 or 2 to select options during weather challenges.
 Follow on-screen instructions for navigation and decision-making.
-Requirements
-Python 3.x
-MariaDB
 
-### Running the Game
-Clone the repository.
-Ensure you have the necessary Python packages installed (requirements.txt provided).
-Set up the MariaDB database using the provided schema.
-Run the game:
+
 
 ```
 python main.py
