@@ -203,14 +203,17 @@ def play_game():
 
     # Game loop
     while fuel_consumed > 0:
-        print(f"\nLevel {level}: Weather Condition - {weather['condition']}")
+        print(f"\nLevel {level}: \n")
+        time.sleep(1)
+        print(f"Current Weather Condition - {weather['condition']}")
         hurdles = get_hurdles_for_level(level)
         print(f"Your current fuel: {fuel_consumed}")
 
         for hurdle in hurdles:
             print("\n--- Challenge ---")
+            time.sleep(1)
             print(hurdle['description'])
-            user_choice = input("Choose an option (1 or 2): ")
+            user_choice = input("\nChoose an option (1 or 2): ")
 
             # print("Hurdle data:", hurdle)
 
@@ -251,7 +254,13 @@ def play_game():
     cursor.execute("UPDATE User SET fuel_consumed = %s WHERE id = %s", (fuel_consumed, user_id))
     connection.commit()
 
-    print(f"Total flight time: {total_flight_time}, Final fuel: {fuel_consumed:.2f}")
+    print(f"\nTotal flight time: {total_flight_time}, Final fuel: {fuel_consumed:.2f}")
+
+    if fuel_consumed < 1:
+        (
+            print(f"\nSince your fuel is empty, you can't take any more flights. To start the game again you need to refill.\
+                  \n***Refill feature COMING SOON***")
+        )
 
     # Close connection
     cursor.close()

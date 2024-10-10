@@ -1,10 +1,9 @@
 import mysql.connector
 from connect_database import connect_database
 
-
 def execute_sql_file(cursor, file_path):
-    # Read the SQL file
-    with open(file_path, 'r') as sql_file:
+    # Read the SQL file with 'latin-1' encoding
+    with open(file_path, 'r', encoding='latin-1') as sql_file:
         sql_commands = sql_file.read()
 
     # Split SQL commands by semicolon
@@ -27,7 +26,7 @@ if __name__ == "__main__":
         cursor = connection.cursor()
 
         # Execute the first SQL script (e.g., initial setup or drop tables)
-        execute_sql_file(cursor, 'flight_simulator_database_script.sql')
+        execute_sql_file(cursor, './flight_simulator_database_script.sql')
 
         # Execute the second SQL script
         execute_sql_file(cursor, 'setup_db.sql')
