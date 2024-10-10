@@ -13,8 +13,10 @@ Run Setup_datbase > setup_db.py file.
 
 ## How to Play
 ### Start the Game:
-Launch the game by running the main.py file in your terminal.
-
+Launch the game by running the main.py file in your terminal or, simply type in terminal:
+```
+python main.py
+```
 ### Enter Username:
 Input your username to start. If you are a returning player, the game will load your last checkpoint.
 
@@ -36,7 +38,3 @@ The game automatically saves your progress at checkpoints. You can resume from t
 Use 1 or 2 to select options during weather challenges.
 Follow on-screen instructions for navigation and decision-making.
 
-
-
-```
-python main.py
